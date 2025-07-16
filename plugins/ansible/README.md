@@ -1,6 +1,5 @@
 # Ansible Plugin
 
-
 ## Overview
 
 Ansible plugin supports deployment execution using Ansible playbooks for PipeCD.
@@ -69,28 +68,28 @@ spec:
           inventory: inventory/staging
 ```
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| ansiblePath | string | Path to ansible-playbook executable. Default is `ansible-playbook` in PATH | No |
-| inventory | string | Default inventory file path (relative to application directory) | No |
-| vault | string | Default vault password file path (relative to application directory) | No |
-| deployTargets | [][DeployTargetConfig](#DeployTargetConfig) | The config for the destinations to deploy applications | Yes |
+| Field         | Type                                        | Description                                                                | Required |
+| ------------- | ------------------------------------------- | -------------------------------------------------------------------------- | -------- |
+| ansiblePath   | string                                      | Path to ansible-playbook executable. Default is `ansible-playbook` in PATH | No       |
+| inventory     | string                                      | Default inventory file path (relative to application directory)            | No       |
+| vault         | string                                      | Default vault password file path (relative to application directory)       | No       |
+| deployTargets | [][DeployTargetConfig](#DeployTargetConfig) | The config for the destinations to deploy applications                     | Yes      |
 
 #### DeployTargetConfig
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| name | string | The name of the deploy target. | Yes |
-| labels | map[string]string | The labels of the deploy target. | No |
-| config | [AnsibleDeployTargetConfig](#AnsibleDeployTargetConfig) | The configuration of the deploy target for Ansible plugin. | No |
+| Field  | Type                                                    | Description                                                | Required |
+| ------ | ------------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| name   | string                                                  | The name of the deploy target.                             | Yes      |
+| labels | map[string]string                                       | The labels of the deploy target.                           | No       |
+| config | [AnsibleDeployTargetConfig](#AnsibleDeployTargetConfig) | The configuration of the deploy target for Ansible plugin. | No       |
 
 ##### AnsibleDeployTargetConfig
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| ansiblePath | string | Path to ansible-playbook executable. Overrides plugin-level setting. | No |
-| inventory | string | Default inventory file path. Overrides plugin-level setting. | No |
-| vault | string | Default vault password file path. Overrides plugin-level setting. | No |
+| Field       | Type   | Description                                                          | Required |
+| ----------- | ------ | -------------------------------------------------------------------- | -------- |
+| ansiblePath | string | Path to ansible-playbook executable. Overrides plugin-level setting. | No       |
+| inventory   | string | Default inventory file path. Overrides plugin-level setting.         | No       |
+| vault       | string | Default vault password file path. Overrides plugin-level setting.    | No       |
 
 > **Configuration Hierarchy**: Settings are applied in the following order (highest to lowest priority):
 > 1. Application-level playbook configuration
@@ -125,43 +124,43 @@ spec:
               timeout: 600
 ```
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| name | string | The name of the application. | No |
-| playbook | [AnsiblePlaybookManifest](#AnsiblePlaybookManifest) | The Ansible playbook configuration. | Yes |
-| pipeline | [AnsiblePipelineSpec](#AnsiblePipelineSpec) | Pipeline configuration for structured deployments. | No |
+| Field    | Type                                                | Description                                        | Required |
+| -------- | --------------------------------------------------- | -------------------------------------------------- | -------- |
+| name     | string                                              | The name of the application.                       | No       |
+| playbook | [AnsiblePlaybookManifest](#AnsiblePlaybookManifest) | The Ansible playbook configuration.                | Yes      |
+| pipeline | [AnsiblePipelineSpec](#AnsiblePipelineSpec)         | Pipeline configuration for structured deployments. | No       |
 
 #### AnsiblePlaybookManifest
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| path | string | Path to the Ansible playbook file (relative to application directory). | Yes |
-| inventory | string | Inventory file path. Highest priority - overrides deploy target and plugin settings. | No |
-| extraVars | map[string]string | Extra variables to pass to the playbook. | No |
-| tags | []string | Tags to run. Only tasks with these tags will be executed. | No |
-| skipTags | []string | Tags to skip. Tasks with these tags will be skipped. | No |
-| limit | string | Limit execution to specific hosts or groups. | No |
-| verbosity | int | Verbosity level (0-4). Higher values provide more output. | No |
-| checkMode | bool | Run in check mode (dry-run). No changes will be made. | No |
-| diffMode | bool | Show diffs of changes. Useful for reviewing what will be changed. | No |
-| vault | string | Vault password file path. Highest priority - overrides deploy target and plugin settings. | No |
-| privateKey | string | SSH private key file path for authentication. | No |
-| remoteUser | string | Remote user for SSH connections. | No |
-| becomeUser | string | User to become (sudo) during playbook execution. | No |
-| timeout | int | Timeout in seconds for playbook execution. | No |
+| Field      | Type              | Description                                                                               | Required |
+| ---------- | ----------------- | ----------------------------------------------------------------------------------------- | -------- |
+| path       | string            | Path to the Ansible playbook file (relative to application directory).                    | Yes      |
+| inventory  | string            | Inventory file path. Highest priority - overrides deploy target and plugin settings.      | No       |
+| extraVars  | map[string]string | Extra variables to pass to the playbook.                                                  | No       |
+| tags       | []string          | Tags to run. Only tasks with these tags will be executed.                                 | No       |
+| skipTags   | []string          | Tags to skip. Tasks with these tags will be skipped.                                      | No       |
+| limit      | string            | Limit execution to specific hosts or groups.                                              | No       |
+| verbosity  | int               | Verbosity level (0-4). Higher values provide more output.                                 | No       |
+| checkMode  | bool              | Run in check mode (dry-run). No changes will be made.                                     | No       |
+| diffMode   | bool              | Show diffs of changes. Useful for reviewing what will be changed.                         | No       |
+| vault      | string            | Vault password file path. Highest priority - overrides deploy target and plugin settings. | No       |
+| privateKey | string            | SSH private key file path for authentication.                                             | No       |
+| remoteUser | string            | Remote user for SSH connections.                                                          | No       |
+| becomeUser | string            | User to become (sudo) during playbook execution.                                          | No       |
+| timeout    | int               | Timeout in seconds for playbook execution.                                                | No       |
 
 #### AnsiblePipelineSpec
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| stages | [][AnsibleStageSpec](#AnsibleStageSpec) | List of stages in the pipeline. | No |
+| Field  | Type                                    | Description                     | Required |
+| ------ | --------------------------------------- | ------------------------------- | -------- |
+| stages | [][AnsibleStageSpec](#AnsibleStageSpec) | List of stages in the pipeline. | No       |
 
 ##### AnsibleStageSpec
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| name | string | Stage name. Must be `ANSIBLE_SYNC`. | Yes |
-| with | map[string]interface{} | Stage-specific configuration. | No |
+| Field | Type                   | Description                         | Required |
+| ----- | ---------------------- | ----------------------------------- | -------- |
+| name  | string                 | Stage name. Must be `ANSIBLE_SYNC`. | Yes      |
+| with  | map[string]interface{} | Stage-specific configuration.       | No       |
 
 ### Stage Config
 
@@ -183,9 +182,9 @@ spec:
 
 #### `ANSIBLE_SYNC`
 
-| Field | Type | Description | Required |
-|-|-|-|-|
-| timeout | int | Timeout in seconds for this stage. Overrides playbook-level timeout. | No |
+| Field   | Type | Description                                                          | Required |
+| ------- | ---- | -------------------------------------------------------------------- | -------- |
+| timeout | int  | Timeout in seconds for this stage. Overrides playbook-level timeout. | No       |
 
 
 
