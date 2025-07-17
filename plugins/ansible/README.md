@@ -1,49 +1,26 @@
-# Ansible Plugin
+# ansible plugin
 
-## Overview
+Deploy applications using Ansible playbooks with PipeCD.
 
-Ansible plugin supports deployment execution using Ansible playbooks for PipeCD.
+## Quick Start
 
-> [!CAUTION] 
-> Currently, this is in development status.
-
-The Ansible plugin allows you to execute Ansible playbooks as part of your deployment pipeline, providing infrastructure automation and configuration management capabilities within PipeCD.
-
-### Quick sync
-
-Quick sync executes the specified Ansible playbook to deploy the application.
-
-It will be planned in one of the following cases:
-- no pipeline was specified in the application configuration file
-- `pipeline` was specified but the deployment strategy is set to quick sync
-
-For example, the application configuration below is missing the pipeline field. This means any deployment will trigger a quick sync deployment.
+Create an application configuration:
 
 ```yaml
 apiVersion: pipecd.dev/v1beta1
 kind: Application
 spec:
-  plugins: 
+  plugins:
     ansible:
-      kind: Playbook
       playbook:
         path: playbooks/deploy.yml
         inventory: inventory/hosts
         verbosity: 1
 ```
 
-### Pipeline sync
+## Configuration
 
-You can configure the pipeline to enable structured deployment with multiple stages.
-
-These are the provided stages for Ansible plugin you can use to build your pipeline:
-
-- `ANSIBLE_SYNC`
-  - execute the specified Ansible playbook to deploy the application
-
-## Plugin Configuration
-
-### Piped Config
+### Piped Configuration
 
 ```yaml
 apiVersion: pipecd.dev/v1beta1
@@ -51,146 +28,38 @@ kind: Piped
 spec:
   plugins:
   - name: ansible
-    url: file:///path/to/.piped/plugins/ansible # or remoteUrl(TBD)
-    config:
-      ansiblePath: /usr/local/bin/ansible-playbook
-      inventory: inventory/default
-      vault: vault/password
+    url: file:///path/to/ansible-plugin
     deployTargets:
       - name: production
         config:
           ansiblePath: /usr/bin/ansible-playbook
           inventory: inventory/production
-          vault: vault/prod-password
-      - name: staging
-        config:
-          ansiblePath: /usr/bin/ansible-playbook
-          inventory: inventory/staging
 ```
 
-| Field         | Type                                        | Description                                                                | Required |
-| ------------- | ------------------------------------------- | -------------------------------------------------------------------------- | -------- |
-| ansiblePath   | string                                      | Path to ansible-playbook executable. Default is `ansible-playbook` in PATH | No       |
-| inventory     | string                                      | Default inventory file path (relative to application directory)            | No       |
-| vault         | string                                      | Default vault password file path (relative to application directory)       | No       |
-| deployTargets | [][DeployTargetConfig](#DeployTargetConfig) | The config for the destinations to deploy applications                     | Yes      |
-
-#### DeployTargetConfig
-
-| Field  | Type                                                    | Description                                                | Required |
-| ------ | ------------------------------------------------------- | ---------------------------------------------------------- | -------- |
-| name   | string                                                  | The name of the deploy target.                             | Yes      |
-| labels | map[string]string                                       | The labels of the deploy target.                           | No       |
-| config | [AnsibleDeployTargetConfig](#AnsibleDeployTargetConfig) | The configuration of the deploy target for Ansible plugin. | No       |
-
-##### AnsibleDeployTargetConfig
-
-| Field       | Type   | Description                                                          | Required |
-| ----------- | ------ | -------------------------------------------------------------------- | -------- |
-| ansiblePath | string | Path to ansible-playbook executable. Overrides plugin-level setting. | No       |
-| inventory   | string | Default inventory file path. Overrides plugin-level setting.         | No       |
-| vault       | string | Default vault password file path. Overrides plugin-level setting.    | No       |
-
-> **Configuration Hierarchy**: Settings are applied in the following order (highest to lowest priority):
-> 1. Application-level playbook configuration
-> 2. Deploy target configuration  
-> 3. Plugin-level configuration
-> 4. Default values
-
-### Application Config
+### Application Configuration
 
 ```yaml
 apiVersion: pipecd.dev/v1beta1
 kind: Application
 spec:
   plugins:
-    ansible: # same name as the one defined in `spec.plugins[].name`
-      name: my-ansible-app
+    ansible:
       playbook:
-        path: playbooks/deploy.yml
-        inventory: inventory/hosts
-        extraVars:
+        path: playbooks/deploy.yml           # Required: Path to playbook
+        inventory: inventory/hosts           # Inventory file
+        extraVars:                          # Variables to pass
           env: production
           version: "1.0.0"
-        tags:
-          - deploy
-          - configure
-        verbosity: 1
-        diffMode: true
-      pipeline:
-        stages:
-          - name: ANSIBLE_SYNC
-            with:
-              timeout: 600
+        tags: [deploy, configure]           # Run only these tags
+        verbosity: 1                        # Verbosity level (0-4)
+        checkMode: false                    # Dry-run mode
+        diffMode: true                      # Show diffs
+        timeout: 600                        # Timeout in seconds
 ```
 
-| Field    | Type                                                | Description                                        | Required |
-| -------- | --------------------------------------------------- | -------------------------------------------------- | -------- |
-| name     | string                                              | The name of the application.                       | No       |
-| playbook | [AnsiblePlaybookManifest](#AnsiblePlaybookManifest) | The Ansible playbook configuration.                | Yes      |
-| pipeline | [AnsiblePipelineSpec](#AnsiblePipelineSpec)         | Pipeline configuration for structured deployments. | No       |
+### Pipeline Configuration
 
-#### AnsiblePlaybookManifest
-
-| Field      | Type              | Description                                                                               | Required |
-| ---------- | ----------------- | ----------------------------------------------------------------------------------------- | -------- |
-| path       | string            | Path to the Ansible playbook file (relative to application directory).                    | Yes      |
-| inventory  | string            | Inventory file path. Highest priority - overrides deploy target and plugin settings.      | No       |
-| extraVars  | map[string]string | Extra variables to pass to the playbook.                                                  | No       |
-| tags       | []string          | Tags to run. Only tasks with these tags will be executed.                                 | No       |
-| skipTags   | []string          | Tags to skip. Tasks with these tags will be skipped.                                      | No       |
-| limit      | string            | Limit execution to specific hosts or groups.                                              | No       |
-| verbosity  | int               | Verbosity level (0-4). Higher values provide more output.                                 | No       |
-| checkMode  | bool              | Run in check mode (dry-run). No changes will be made.                                     | No       |
-| diffMode   | bool              | Show diffs of changes. Useful for reviewing what will be changed.                         | No       |
-| vault      | string            | Vault password file path. Highest priority - overrides deploy target and plugin settings. | No       |
-| privateKey | string            | SSH private key file path for authentication.                                             | No       |
-| remoteUser | string            | Remote user for SSH connections.                                                          | No       |
-| becomeUser | string            | User to become (sudo) during playbook execution.                                          | No       |
-| timeout    | int               | Timeout in seconds for playbook execution.                                                | No       |
-
-#### AnsiblePipelineSpec
-
-| Field  | Type                                    | Description                     | Required |
-| ------ | --------------------------------------- | ------------------------------- | -------- |
-| stages | [][AnsibleStageSpec](#AnsibleStageSpec) | List of stages in the pipeline. | No       |
-
-##### AnsibleStageSpec
-
-| Field | Type                   | Description                         | Required |
-| ----- | ---------------------- | ----------------------------------- | -------- |
-| name  | string                 | Stage name. Must be `ANSIBLE_SYNC`. | Yes      |
-| with  | map[string]interface{} | Stage-specific configuration.       | No       |
-
-### Stage Config
-
-```yaml
-apiVersion: pipecd.dev/v1beta1
-kind: Application
-spec:
-  plugins:
-    ansible:
-      kind: Playbook
-      playbook:
-        path: playbooks/deploy.yml
-      pipeline:
-        stages:
-          - name: ANSIBLE_SYNC
-            with:
-              timeout: 600
-```
-
-#### `ANSIBLE_SYNC`
-
-| Field   | Type | Description                                                          | Required |
-| ------- | ---- | -------------------------------------------------------------------- | -------- |
-| timeout | int  | Timeout in seconds for this stage. Overrides playbook-level timeout. | No       |
-
-
-
-## Usage Examples
-
-### Basic Playbook Execution
+For structured deployments with multiple stages:
 
 ```yaml
 apiVersion: pipecd.dev/v1beta1
@@ -201,10 +70,70 @@ spec:
       playbook:
         path: playbooks/deploy.yml
         inventory: inventory/hosts
-        verbosity: 1
+      pipeline:
+        stages:
+          - name: ANSIBLE_SYNC
+            with:
+              timeout: 900
 ```
 
-### Advanced Configuration with Variables and Tags
+## Configuration Reference
+
+### Deploy Target Configuration Keys
+
+Configure in piped config under `deployTargets[].config`:
+
+| Key | Type | Description | Required |
+|-----|------|-------------|----------|
+| `ansiblePath` | string | Path to ansible-playbook executable | No |
+| `inventory` | string | Default inventory file path | No |
+| `vault` | string | Default vault password file path | No |
+
+### Application Configuration Keys
+
+Configure in application config under `spec.plugins.ansible.playbook`:
+
+| Key | Type | Description | Required | Default |
+|-----|------|-------------|----------|---------|
+| `path` | string | Path to the Ansible playbook file | Yes | - |
+| `inventory` | string | Inventory file path | No | - |
+| `extraVars` | map[string]string | Extra variables to pass to playbook | No | - |
+| `tags` | []string | Tags to run (only tasks with these tags) | No | - |
+| `skipTags` | []string | Tags to skip | No | - |
+| `limit` | string | Limit execution to specific hosts/groups | No | - |
+| `verbosity` | int | Verbosity level (0-4) | No | 0 |
+| `checkMode` | bool | Run in check mode (dry-run) | No | false |
+| `diffMode` | bool | Show diffs of changes | No | false |
+| `vault` | string | Vault password file path | No | - |
+| `privateKey` | string | SSH private key file path | No | - |
+| `remoteUser` | string | Remote user for SSH connections | No | - |
+| `becomeUser` | string | User to become (sudo) during execution | No | - |
+| `timeout` | int | Timeout in seconds for execution | No | 0 (no timeout) |
+
+### Pipeline Stage Configuration Keys
+
+Configure in pipeline stage under `stages[].with`:
+
+| Key | Type | Description | Required | Default |
+|-----|------|-------------|----------|---------|
+| `timeout` | int | Timeout in seconds for this stage | No | Uses playbook timeout |
+
+## Examples
+
+### Basic Deployment
+
+```yaml
+apiVersion: pipecd.dev/v1beta1
+kind: Application
+spec:
+  plugins:
+    ansible:
+      playbook:
+        path: deploy.yml
+        inventory: hosts
+```
+
+### Advanced Configuration
 
 ```yaml
 apiVersion: pipecd.dev/v1beta1
@@ -218,98 +147,26 @@ spec:
         extraVars:
           app_version: "{{ .Input.Tag }}"
           environment: production
-          database_host: "prod-db.example.com"
-        tags:
-          - deploy
-          - configure
-        skipTags:
-          - debug
+        tags: [deploy, configure]
         verbosity: 2
         diffMode: true
-        checkMode: false
-```
-
-### Pipeline Configuration
-
-```yaml
-apiVersion: pipecd.dev/v1beta1
-kind: Application
-spec:
-  plugins:
-    ansible:
-      playbook:
-        path: playbooks/deploy.yml
-        inventory: inventory/hosts
-        extraVars:
-          deployment_id: "{{ .Input.Trigger.Commit.Hash }}"
-          environment: "production"
-      pipeline:
-        stages:
-          - name: ANSIBLE_SYNC
-            with:
-              timeout: 900
-```
-
-### Vault and SSH Key Configuration
-
-```yaml
-apiVersion: pipecd.dev/v1beta1
-kind: Application
-spec:
-  plugins:
-    ansible:
-      playbook:
-        path: playbooks/deploy.yml
-        inventory: inventory/secure-hosts
         vault: vault/production.key
         privateKey: keys/deploy.pem
         remoteUser: deploy
         becomeUser: root
-        extraVars:
-          secure_mode: "true"
 ```
 
 ## Installation
 
 ### Prerequisites
 
-- Ansible must be installed on the system where the plugin runs
-- SSH access to target hosts configured
-- Proper inventory and playbook files in your application repository
+- Ansible installed on the system
+- SSH access to target hosts
+- Playbook and inventory files in your repository
 
-### Building the Plugin
+### Setup
 
-```bash
-# Clone the repository
-git clone https://github.com/pipe-cd/pipecd-community-plugins.git
-cd pipecd-community-plugins/plugins/ansible
-
-# Build for current platform
-make build
-
-# Build for Linux (production)
-make build-linux
-
-# Run tests
-make test
-
-# Clean build artifacts
-make clean
-```
-
-### Installation Steps
-
-1. **Build the plugin binary:**
-   ```bash
-   make build-linux
-   ```
-
-2. **Deploy the plugin binary to your PipeCD environment:**
-   ```bash
-   cp ansible-plugin-linux /path/to/piped/plugins/
-   ```
-
-3. **Configure the plugin in your piped configuration:**
+**Configure in piped:**
    ```yaml
    apiVersion: pipecd.dev/v1beta1
    kind: Piped
@@ -317,52 +174,4 @@ make clean
      plugins:
      - name: ansible
        url: file:///path/to/piped/plugins/ansible-plugin
-       config:
-         ansiblePath: /usr/bin/ansible-playbook
-       deployTargets:
-         - name: production
-           config:
-             inventory: inventory/production
    ```
-
-4. **Ensure Ansible is installed on the target system:**
-   ```bash
-   # Ubuntu/Debian
-   sudo apt update && sudo apt install ansible
-
-   # CentOS/RHEL
-   sudo yum install ansible
-
-   # macOS
-   brew install ansible
-   ```
-
-## Contributing
-
-This plugin is part of the [PipeCD Community Plugins](https://github.com/pipe-cd/pipecd-community-plugins) repository. Contributions are welcome!
-
-### Development
-
-```bash
-# Install dependencies
-go mod download
-
-# Run tests
-make test
-
-# Build plugin
-make build
-
-# Run integration tests (requires Ansible)
-make integration-test
-```
-
-### Submitting Changes
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-For more information, see the [Contributing Guide](https://github.com/pipe-cd/pipecd-community-plugins/blob/main/CONTRIBUTING.md).
