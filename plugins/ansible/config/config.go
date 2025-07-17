@@ -15,11 +15,7 @@
 package config
 
 // AnsiblePluginConfig represents the plugin-level configuration for Ansible.
-type AnsiblePluginConfig struct {
-	AnsiblePath string `json:"ansiblePath,omitempty"`
-	Inventory   string `json:"inventory,omitempty"`
-	Vault       string `json:"vault,omitempty"`
-}
+type AnsiblePluginConfig struct{}
 
 // AnsibleDeployTargetConfig represents the configuration for Ansible deployment targets.
 type AnsibleDeployTargetConfig struct {
@@ -63,4 +59,3 @@ type AnsibleStageSpec struct {
 	Name string                 `json:"name"`
 	With map[string]interface{} `json:"with,omitempty"`
 }
-

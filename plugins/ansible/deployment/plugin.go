@@ -153,9 +153,6 @@ func (p *Plugin) executeAnsiblePlaybook(ctx context.Context, cfg *config.Ansible
 
 	ansiblePath := dtConfig.AnsiblePath
 	if ansiblePath == "" {
-		ansiblePath = cfg.AnsiblePath
-	}
-	if ansiblePath == "" {
 		ansiblePath = "ansible-playbook"
 	}
 	lp.Infof("⚙️  Ansible executable: %s", ansiblePath)
@@ -186,9 +183,6 @@ func (p *Plugin) executeAnsiblePlaybook(ctx context.Context, cfg *config.Ansible
 	inventory := playbookConfig.Inventory
 	if inventory == "" {
 		inventory = dtConfig.Inventory
-	}
-	if inventory == "" {
-		inventory = cfg.Inventory
 	}
 	if inventory != "" {
 		inventoryPath := filepath.Join(input.Request.TargetDeploymentSource.ApplicationDirectory, inventory)
@@ -249,9 +243,6 @@ func (p *Plugin) executeAnsiblePlaybook(ctx context.Context, cfg *config.Ansible
 	vault := playbookConfig.Vault
 	if vault == "" {
 		vault = dtConfig.Vault
-	}
-	if vault == "" {
-		vault = cfg.Vault
 	}
 	if vault != "" {
 		vaultPath := filepath.Join(input.Request.TargetDeploymentSource.ApplicationDirectory, vault)
