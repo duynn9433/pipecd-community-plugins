@@ -17,17 +17,12 @@ package main
 import (
 	"log"
 
+	"github.com/pipe-cd/community-plugins/plugins/ansible/deployment"
 	sdk "github.com/pipe-cd/piped-plugin-sdk-go"
-
-	"pipe-cd/community-plugins/plugins/ansible/config"
-	"pipe-cd/community-plugins/plugins/ansible/deployment"
 )
 
 func main() {
-	plugin, err := sdk.NewPlugin[config.AnsiblePluginConfig, config.AnsibleDeployTargetConfig, config.AnsibleApplicationSpec](
-		"0.1.0",
-		sdk.WithDeploymentPlugin[config.AnsiblePluginConfig, config.AnsibleDeployTargetConfig, config.AnsibleApplicationSpec](&deployment.Plugin{}),
-	)
+	plugin, err := sdk.NewPlugin("0.1.0", sdk.WithDeploymentPlugin(&deployment.Plugin{}))
 	if err != nil {
 		log.Fatalln(err)
 	}

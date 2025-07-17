@@ -22,8 +22,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pipe-cd/community-plugins/plugins/ansible/config"
 	sdk "github.com/pipe-cd/piped-plugin-sdk-go"
-	"pipe-cd/community-plugins/plugins/ansible/config"
 )
 
 // Plugin implements sdk.DeploymentPlugin for Ansible.
@@ -33,6 +34,8 @@ var _ sdk.DeploymentPlugin[config.AnsiblePluginConfig, config.AnsibleDeployTarge
 
 const (
 	AnsibleSync Stage = "ANSIBLE_SYNC"
+	// TODO: Add rollback stage
+	AnsibleRollback Stage = "ANSIBLE_ROLLBACK"
 )
 
 type Stage string
@@ -61,10 +64,6 @@ func (p *Plugin) ExecuteStage(ctx context.Context, cfg *config.AnsiblePluginConf
 		return nil, fmt.Errorf("unsupported stage: %s", input.Request.StageName)
 	}
 }
-
-const (
-	ArtifactAnsiblePlaybook = "ansible-playbook"
-)
 
 func (p *Plugin) DetermineVersions(ctx context.Context, cfg *config.AnsiblePluginConfig, d *sdk.DetermineVersionsInput[config.AnsibleApplicationSpec]) (*sdk.DetermineVersionsResponse, error) {
 	appCfg, err := d.Request.DeploymentSource.AppConfig()
@@ -297,7 +296,7 @@ func (p *Plugin) executeAnsiblePlaybook(ctx context.Context, cfg *config.Ansible
 
 	cmd := exec.CommandContext(cmdCtx, ansiblePath, args...)
 	cmd.Dir = input.Request.TargetDeploymentSource.ApplicationDirectory
-	cmd.Env = append(os.Environ())
+	cmd.Env = os.Environ()
 	cmd.Stdout = lp
 	cmd.Stderr = lp
 

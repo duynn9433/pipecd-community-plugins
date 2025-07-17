@@ -1,4 +1,4 @@
-module pipe-cd/community-plugins/plugins/ansible
+module github.com/pipe-cd/community-plugins/plugins/ansible
 
 go 1.24.2
 
