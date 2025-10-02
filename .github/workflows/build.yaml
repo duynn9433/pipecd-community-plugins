@@ -1,6 +1,7 @@
 name: build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -25,3 +26,9 @@ jobs:
           cache: true
       - name: Build go plugins # TODO: Make it parallel
         run: make build/go
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipecd-plugins
+          path: .artifacts/plugins/
+          retention-days: 7
